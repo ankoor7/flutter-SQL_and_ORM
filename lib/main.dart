@@ -59,23 +59,34 @@ class _ShListState extends State<ShList> {
         itemCount: (shoppingLists != null) ? shoppingLists.length : 0,
         itemBuilder: (BuildContext context, int index) {
           final ShoppingList list = shoppingLists[index];
-          return ListTile(
-            title: Text(list.name),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => ItemsScreen(list)),
-              );
+          return Dismissible(
+            key: Key('${list.id}:${list.name}'),
+            onDismissed: (direction) async {
+              String listName = list.name;
+              await list.delete();
+              Scaffold.of(context).showSnackBar(SnackBar(
+                content: Text('$listName was deleted'),
+              ));
+              loadLists();
             },
-            trailing: IconButton(
-              icon: Icon(Icons.edit),
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) =>
-                      dialog.buildDialog(context, list, onSave: loadLists),
+            child: ListTile(
+              title: Text(list.name),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => ItemsScreen(list)),
                 );
               },
+              trailing: IconButton(
+                icon: Icon(Icons.edit),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) =>
+                        dialog.buildDialog(context, list, onSave: loadLists),
+                  );
+                },
+              ),
             ),
           );
         },
@@ -88,8 +99,8 @@ class _ShListState extends State<ShList> {
         onPressed: () {
           showDialog(
             context: context,
-            builder: (BuildContext context) => dialog
-                .buildDialog(context, ShoppingList(), onSave: loadLists),
+            builder: (BuildContext context) =>
+                dialog.buildDialog(context, ShoppingList(), onSave: loadLists),
           );
         },
       ),

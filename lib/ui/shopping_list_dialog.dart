@@ -8,13 +8,13 @@ class ShoppingListDialog {
   Widget buildDialog(BuildContext context, ShoppingList list, { VoidCallback onSave }) {
     bool isNew = (list.id == null);
 
-    if (list.name != null) {
-      txtName.text = list.name;
-    }
+    txtName.text =  (list.name != null)
+        ? list.name
+        : '';
 
-    if (list.priority != null) {
-      txtPriority.text = list.priority.toString();
-    }
+    txtPriority.text =  (list.priority != null)
+        ? list.priority
+        : '';
 
     return AlertDialog(
       title: Text(
