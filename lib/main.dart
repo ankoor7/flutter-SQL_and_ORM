@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shopping/ui/items_screen.dart';
+import 'package:shopping/ui/shopping_list_dialog.dart';
 
 import 'model/shopping.dart';
 
@@ -16,44 +17,26 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'Shopping List'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-  final String title;
-
-  @override
-  _MyHomePageState createState() {
-    testDb();
-    return _MyHomePageState();
-  }
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: ShList(),
+      home: ShList(title: 'Shopping List'),
     );
   }
 }
 
 class ShList extends StatefulWidget {
+  ShList({Key key, this.title}) : super(key: key);
+  final String title;
+
   @override
   _ShListState createState() => _ShListState();
 }
 
 class _ShListState extends State<ShList> {
   List<ShoppingList> shoppingLists;
+  ShoppingListDialog dialog;
 
-  Future<void> loadLists() async {
-    List<ShoppingList> loadedLists = await ShoppingList().select().orderBy('name').toList();
+  Future loadLists() async {
+    List<ShoppingList> loadedLists =
+        await ShoppingList().select().orderBy('name').toList();
     setState(() {
       shoppingLists = loadedLists;
     });
@@ -61,31 +44,55 @@ class _ShListState extends State<ShList> {
 
   @override
   void initState() {
+    dialog = ShoppingListDialog();
     loadLists();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: (shoppingLists != null) ? shoppingLists.length : 0,
-      itemBuilder: (BuildContext context, int index) {
-        final ShoppingList list = shoppingLists[index];
-        return ListTile(
-          title: Text(list.name),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => ItemsScreen(list)),
-            );
-          },
-          trailing: IconButton(
-            icon: Icon(Icons.edit),
-              onPressed: () {},
-          ),
-        );
-      },
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: ListView.builder(
+        itemCount: (shoppingLists != null) ? shoppingLists.length : 0,
+        itemBuilder: (BuildContext context, int index) {
+          final ShoppingList list = shoppingLists[index];
+          return ListTile(
+            title: Text(list.name),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ItemsScreen(list)),
+              );
+            },
+            trailing: IconButton(
+              icon: Icon(Icons.edit),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) =>
+                      dialog.buildDialog(context, list, onSave: loadLists),
+                );
+              },
+            ),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(
+          Icons.add,
+        ),
+        backgroundColor: Colors.pink,
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) => dialog
+                .buildDialog(context, ShoppingList(), onSave: loadLists),
+          );
+        },
+      ),
     );
   }
 }
-
